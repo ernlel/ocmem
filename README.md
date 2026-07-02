@@ -39,7 +39,7 @@ It gives opencode two things:
 ## Quick install
 
 ```bash
-git clone https://github.com/<you>/ocmem.git
+git clone https://github.com/ernlel/ocmem.git
 cd ocmem
 ./scripts/install.sh
 ```
