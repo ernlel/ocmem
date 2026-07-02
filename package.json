@@ -1,0 +1,13 @@
+{
+  "name": "ocmem",
+  "version": "1.0.0",
+  "description": "Structured memory system for opencode, adapted from John Conneely's Claude Code memory setup.",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "^1.17.9",
+    "typescript": "^5.6.0"
+  }
+}
