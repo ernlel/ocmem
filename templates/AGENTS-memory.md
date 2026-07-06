@@ -39,6 +39,10 @@ Project (`.opencode/memory/`):
 
 ### Memory Review (mandatory)
 
+The ocmem plugin injects a hard reminder into every LLM call's system prompt
+(see `plugin/ocmem.ts: REMINDER`). You will see a `=== ocmem: Memory Review
+Required ===` block on every turn — that is the rule.
+
 Before ending any task that involved debugging, configuration, or learning, do a final
 memory scan:
 
