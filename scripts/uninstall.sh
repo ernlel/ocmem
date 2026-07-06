@@ -29,7 +29,11 @@ echo "Config dir: $OC_DIR"
 echo ""
 
 rm -f "$OC_DIR/plugins/ocmem.ts" &&      echo "[1] Removed plugin     ($OC_DIR/plugins/ocmem.ts)"       || true
-rm -f "$OC_DIR/commands/init-memory.md" && echo "[2] Removed command   ($OC_DIR/commands/init-memory.md)" || true
+rm -f "$OC_DIR/commands/ocmem-init.md"       && echo "[2a] Removed command  ($OC_DIR/commands/ocmem-init.md)"        || true
+rm -f "$OC_DIR/commands/ocmem-remember.md"   && echo "[2b] Removed command  ($OC_DIR/commands/ocmem-remember.md)"    || true
+rm -f "$OC_DIR/commands/ocmem-reorganize.md" && echo "[2c] Removed command  ($OC_DIR/commands/ocmem-reorganize.md)"  || true
+# Backward-compat: remove legacy init-memory.md if it lingers from older installs
+rm -f "$OC_DIR/commands/init-memory.md"      && echo "[2d] Removed legacy   ($OC_DIR/commands/init-memory.md)"       || true
 
 if [ "$PURGE" -eq 1 ]; then
   echo ""

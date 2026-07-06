@@ -6,3 +6,6 @@ node_modules/
 *.swp
 *.swo
 *~
+
+# Per-developer opencode state (plugin cache, project-local memory, etc.)
+.opencode/

@@ -49,7 +49,8 @@ Then **restart opencode**. That's it — the plugin is auto-loaded from
 `~/.config/opencode/AGENTS.md`.
 
 > The installer never overwrites existing memory files. Run
-> `./scripts/install.sh --force` to reset the templates.
+> `./scripts/install.sh --force` to re-deploy template scaffolding (plugin,
+> AGENTS.md block, commands). Memory data is always preserved.
 
 ### What the installer does
 
@@ -58,7 +59,7 @@ Then **restart opencode**. That's it — the plugin is auto-loaded from
 | Plugin | `~/.config/opencode/plugins/ocmem.ts` |
 | Global memory dir | `~/.config/opencode/memory/` + `memory.md`, `general.md`, `tools/`, `domain/` |
 | AGENTS.md patch | memory-management rules appended (between `<!-- ocmem:begin -->` markers) |
-| Command | `~/.config/opencode/commands/init-memory.md` (`/init-memory`) |
+| Commands | `~/.config/opencode/commands/ocmem-{init,remember,reorganize}.md` |
 
 ---
 
@@ -76,9 +77,11 @@ mkdir -p ~/.config/opencode/memory/tools ~/.config/opencode/memory/domain
 cp templates/memory.md  ~/.config/opencode/memory/memory.md
 cp templates/general.md ~/.config/opencode/memory/general.md
 
-# 3. Command
+# 3. Commands
 mkdir -p ~/.config/opencode/commands
-cp templates/init-memory.md ~/.config/opencode/commands/init-memory.md
+cp templates/ocmem-init.md       ~/.config/opencode/commands/ocmem-init.md
+cp templates/ocmem-remember.md   ~/.config/opencode/commands/ocmem-remember.md
+cp templates/ocmem-reorganize.md ~/.config/opencode/commands/ocmem-reorganize.md
 
 # 4. AGENTS.md — append the contents of templates/AGENTS-memory.md
 cat templates/AGENTS-memory.md >> ~/.config/opencode/AGENTS.md
@@ -101,7 +104,7 @@ system prompt automatically.
 Run the built-in command in any repo:
 
 ```
-/init-memory
+/ocmem-init
 ```
 
 This creates `.opencode/memory/MEMORY.md` from the template if it doesn't
@@ -118,11 +121,23 @@ to the right file — `tools/`, `domain/`, `general.md`, or the project
 2026-07-02 — The Atlassian CLI requires --no-prompt in CI. — Prevents hangs.
 ```
 
+To force a review of the current session and pick what to record, run:
+
+```
+/ocmem-remember
+```
+
+The agent scans the conversation, classifies candidates as global vs project,
+checks for duplicates against existing memory, presents a numbered list, and
+writes only the entries you confirm.
+
 ### Reorganise memory
 
-Over time notes accumulate. Say:
+Over time notes accumulate. Run:
 
-> reorganize memory
+```
+/ocmem-reorganize
+```
 
 The agent reads all memory files, removes duplicates, merges related entries,
 splits overstuffed files, re-sorts by date, updates the index, and shows you a
@@ -238,7 +253,9 @@ ocmem/
 │   ├── memory.md                # global index template
 │   ├── general.md               # global conventions template
 │   ├── MEMORY.md                # project memory template
-│   └── init-memory.md           # /init-memory command template
+│   ├── ocmem-init.md            # /ocmem-init command template
+│   ├── ocmem-remember.md        # /ocmem-remember command template
+│   └── ocmem-reorganize.md      # /ocmem-reorganize command template
 ├── scripts/
 │   ├── install.sh               # one-command installer
 │   └── uninstall.sh             # uninstaller (keeps memory by default)

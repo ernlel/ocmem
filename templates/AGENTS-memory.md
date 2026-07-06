@@ -54,21 +54,14 @@ If the answer to all three is "no", say so briefly so the user knows you checked
 
 ### Maintenance
 
-When the user says "reorganize memory":
-
-1. Read all memory files
-2. Remove duplicates and outdated entries
-3. Merge entries that belong together
-4. Split files that cover too many topics
-5. Re-sort entries by date within each file
-6. Update `memory.md` index
-7. Show a summary of what changed
+Use the `/ocmem-reorganize` command. It handles dedupe, merge, split,
+re-sort, and index refresh.
 
 ## Project Memory Auto-Init
 
 At session start in any project, check for `.opencode/memory/MEMORY.md`. If it
 does not exist, create it using the project memory template (see
-`/init-memory`). The first time you open a new project the scaffolding is
+`/ocmem-init`). The first time you open a new project the scaffolding is
 created automatically; after that, fill it in as you go.
 
 ## Global Memory Reference

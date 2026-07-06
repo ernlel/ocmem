@@ -4,7 +4,12 @@
 #
 # Usage:
 #   ./scripts/install.sh          # install everything
-#   ./scripts/install.sh --force  # overwrite existing template files too
+#   ./scripts/install.sh --force  # overwrite template files (NEVER memory data)
+#
+# --force re-deploys template scaffolding (plugin, AGENTS.md block, the
+# /ocmem-* commands). It does NOT touch memory files (memory.md, general.md,
+# tools/*, domain/*) — those are user data and are always preserved if they
+# exist.
 #
 set -euo pipefail
 
@@ -38,6 +43,8 @@ echo "[1/5] Plugin     -> $OC_DIR/plugins/ocmem.ts"
 # 2. Global memory structure ------------------------------------------------
 mkdir -p "$OC_DIR/memory/tools" "$OC_DIR/memory/domain"
 
+# Template file deployer. Honours --force for scaffolding files.
+# NEVER call this for memory data — use copy_user_data instead.
 copy_template() {
   local src="$1" dest="$2"
   if [ "$FORCE" -eq 1 ] || [ ! -f "$dest" ]; then
@@ -48,9 +55,21 @@ copy_template() {
   fi
 }
 
+# User data deployer. Creates if missing, but NEVER overwrites — regardless
+# of --force. Memory files belong to the user.
+copy_user_data() {
+  local src="$1" dest="$2"
+  if [ ! -f "$dest" ]; then
+    install -m 644 "$src" "$dest"
+    echo "       created $(basename "$dest")"
+  else
+    echo "       kept existing $(basename "$dest") (user data, never overwritten)"
+  fi
+}
+
 echo "[2/5] Memory dir -> $OC_DIR/memory/"
-copy_template "$REPO_ROOT/templates/memory.md"  "$OC_DIR/memory/memory.md"
-copy_template "$REPO_ROOT/templates/general.md" "$OC_DIR/memory/general.md"
+copy_user_data "$REPO_ROOT/templates/memory.md"  "$OC_DIR/memory/memory.md"
+copy_user_data "$REPO_ROOT/templates/general.md" "$OC_DIR/memory/general.md"
 
 # 3. AGENTS.md instructions -------------------------------------------------
 AGENTS_FILE="$OC_DIR/AGENTS.md"
@@ -58,7 +77,28 @@ OPEN_MARKER="<!-- ocmem:begin -->"
 CLOSE_MARKER="<!-- ocmem:end -->"
 
 if [ -f "$AGENTS_FILE" ] && grep -qF "$OPEN_MARKER" "$AGENTS_FILE"; then
-  echo "[3/5] AGENTS.md -> already patched (skipped)"
+  if [ "$FORCE" -eq 1 ]; then
+    # Re-deploy: strip the existing ocmem block and append the fresh one.
+    # Use a temp file because sed -i differs between GNU and BSD.
+    # Variable names avoid awk reserved words (close, open, function, …).
+    tmp="$(mktemp)"
+    awk -v om="$OPEN_MARKER" -v cm="$CLOSE_MARKER" '
+      $0 == om { skip = 1; next }
+      $0 == cm { skip = 0; next }
+      !skip
+    ' "$AGENTS_FILE" > "$tmp"
+    {
+      echo ""
+      echo "$OPEN_MARKER"
+      cat "$REPO_ROOT/templates/AGENTS-memory.md"
+      echo "$CLOSE_MARKER"
+      echo ""
+    } >> "$tmp"
+    mv "$tmp" "$AGENTS_FILE"
+    echo "[3/5] AGENTS.md -> ocmem block refreshed (--force)"
+  else
+    echo "[3/5] AGENTS.md -> already patched (skipped)"
+  fi
 else
   if [ ! -f "$AGENTS_FILE" ]; then
     : > "$AGENTS_FILE"
@@ -73,10 +113,12 @@ else
   echo "[3/5] AGENTS.md -> memory instructions appended"
 fi
 
-# 4. /init-memory command ---------------------------------------------------
+# 4. ocmem commands ---------------------------------------------------------
 mkdir -p "$OC_DIR/commands"
-install -m 644 "$REPO_ROOT/templates/init-memory.md" "$OC_DIR/commands/init-memory.md"
-echo "[4/5] Command    -> $OC_DIR/commands/init-memory.md"
+copy_template "$REPO_ROOT/templates/ocmem-init.md"       "$OC_DIR/commands/ocmem-init.md"
+copy_template "$REPO_ROOT/templates/ocmem-remember.md"   "$OC_DIR/commands/ocmem-remember.md"
+copy_template "$REPO_ROOT/templates/ocmem-reorganize.md" "$OC_DIR/commands/ocmem-reorganize.md"
+echo "[4/5] Commands   -> $OC_DIR/commands/ocmem-{init,remember,reorganize}.md"
 
 # 5. Plugin dependency ------------------------------------------------------
 #
@@ -109,6 +151,7 @@ echo ""
 echo "Done. Restart opencode for the changes to take effect."
 echo ""
 echo "Next steps:"
-echo "  • Open any project and run  /init-memory  to scaffold project memory"
-echo "  • Say  \"reorganize memory\"  to tidy up notes the agent has accumulated"
+echo "  • Open any project and run  /ocmem-init       to scaffold project memory"
+echo "  • Run  /ocmem-remember                        to review a session and pick what to record"
+echo "  • Run  /ocmem-reorganize                      to tidy up the memory files"
 echo "  • Edit  $OC_DIR/memory/memory.md  to curate your global index"
