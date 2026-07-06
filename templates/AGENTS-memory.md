@@ -25,12 +25,28 @@ Project (`.opencode/memory/`):
 
 ### Rules
 
-1. When you learn something worth remembering, write it to the right file immediately
+1. Write to memory immediately when ANY of these happen:
+   - You discover a tool/config quirk you had to debug (not in docs)
+   - You find a pattern that would help in any future project
+   - You make a non-obvious design decision and its rationale
+   - You learn a project convention, dependency, or constraint
+   Do NOT wait for the user to ask. If in doubt, write it — over-recording is cheap, re-discovering is expensive.
 2. Keep `memory.md` as a current index with one-line descriptions
 3. Entries: date, what, why — nothing more
 4. The `ocmem` plugin injects `memory.md` and the project `MEMORY.md` automatically. Load other topic files only when relevant
 5. If a file does not exist yet, create it
 6. Before removing or modifying any existing memory entry, ask the user to confirm — show the current content and the proposed change
+
+### Memory Review (mandatory)
+
+Before ending any task that involved debugging, configuration, or learning, do a final
+memory scan:
+
+1. Did I learn anything cross-project? → `~/.config/opencode/memory/tools/` or `domain/`
+2. Did I learn anything about THIS project? → `.opencode/memory/MEMORY.md`
+3. Update the index in `memory.md` for any new files
+
+If the answer to all three is "no", say so briefly so the user knows you checked.
 
 ### Maintenance
 
