@@ -1,6 +1,6 @@
 {
   "name": "ocmem",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Structured memory system for opencode, adapted from John Conneely's Claude Code memory setup.",
   "private": true,
   "scripts": {

@@ -6,7 +6,4 @@ node_modules/
 *.swp
 *.swo
 *~
-
-# Per-developer opencode state (plugin cache, project-local memory, etc.)
-# NOTE: The project MEMORY.md now lives at the repo root and is tracked.
 .opencode/

@@ -2,6 +2,15 @@
 
 All notable changes to ocmem.
 
+## 1.2.0 — 2026-07-07
+
+### Changed
+- Project `MEMORY.md` moved from `.opencode/memory/` to repo root. Plugin now
+  always looks for `MEMORY.md` at the project root. All templates, docs, and
+  README updated accordingly.
+- REMINDER short text refined to user preference: `"Review memory before ending
+  task (full rules in AGENTS.md)"`.
+
 ## 1.1.0 — 2026-07-07
 
 ### Added
