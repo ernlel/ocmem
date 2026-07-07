@@ -96,7 +96,7 @@ export function signature(paths: string[]): string {
  * referenced in the index. Orphaned files are invisible to the agent
  * until they are added to memory.md — this warning surfaces them.
  */
-function checkOrphanedFiles(globalDir: string, indexContent: string): string | null {
+export function checkOrphanedFiles(globalDir: string, indexContent: string): string | null {
   const rels: string[] = []
   for (const sub of ["tools", "domain"]) {
     const dir = join(globalDir, sub)
@@ -115,6 +115,36 @@ function checkOrphanedFiles(globalDir: string, indexContent: string): string | n
   }
   if (rels.length === 0) return null
   return `=== ${MARKER}: Orphaned Memory Files ===\nThe following files exist in the memory directory but are not listed in the index. Consider updating memory.md to reference them:\n${rels.map((r) => `  - ${r}`).join("\n")}`
+}
+
+/**
+ * Build the combined memory context string from project and global sources.
+ * Pure-ish: reads from disk but has no closure state — suitable for testing.
+ * The plugin wraps this in an mtime-based cache for per-process reuse.
+ */
+export function buildMemoryContext(opts: {
+  directory: string
+  projectMemory: string
+  globalDir: string
+  globalIndex: string
+}): string {
+  const parts: string[] = []
+
+  const project = readTruncated(opts.projectMemory, MAX_PROJECT_LINES)
+  if (project) {
+    parts.push(
+      `=== ${MARKER}: Project Memory (${opts.directory}) ===\n${project}`,
+    )
+  }
+
+  const global = readTruncated(opts.globalIndex, MAX_INDEX_LINES)
+  if (global) {
+    parts.push(`=== ${MARKER}: Global Memory Index ===\n${global}`)
+    const orphaned = checkOrphanedFiles(opts.globalDir, global)
+    if (orphaned) parts.push(orphaned)
+  }
+
+  return parts.length > 0 ? parts.join("\n\n") : ""
 }
 
 const OcmemPlugin: Plugin = async ({ directory }) => {
@@ -138,25 +168,13 @@ const OcmemPlugin: Plugin = async ({ directory }) => {
     if (sig === cachedSig && cachedContext) {
       return cachedContext
     }
-
-    const parts: string[] = []
-
-    const project = readTruncated(projectMemory, MAX_PROJECT_LINES)
-    if (project) {
-      parts.push(
-        `=== ${MARKER}: Project Memory (${directory}) ===\n${project}`,
-      )
-    }
-
-    const global = readTruncated(globalIndex, MAX_INDEX_LINES)
-    if (global) {
-      parts.push(`=== ${MARKER}: Global Memory Index ===\n${global}`)
-      const orphaned = checkOrphanedFiles(globalDir, global)
-      if (orphaned) parts.push(orphaned)
-    }
-
+    cachedContext = buildMemoryContext({
+      directory,
+      projectMemory,
+      globalDir,
+      globalIndex,
+    })
     cachedSig = sig
-    cachedContext = parts.length > 0 ? parts.join("\n\n") : ""
     return cachedContext
   }
 
