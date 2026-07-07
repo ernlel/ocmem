@@ -6,7 +6,7 @@ Thanks for wanting to help.
 
 ```bash
 # Clone and install
-git clone https://github.com/anomalyco/opencode
+git clone https://github.com/ernlel/ocmem.git
 cd ocmem
 npm install
 ```
@@ -56,11 +56,11 @@ Run `npm test` before pushing.
 
 ## Submitting changes
 
-1. Fork and branch from `main`.
+1. Fork and branch from `master`.
 2. Keep commits focused — one logical change per commit.
 3. Write a clear commit message (present tense, imperative mood).
 4. Run `npm run typecheck && npm test`.
-5. Open a PR against `main` with a description of what changed and why.
+5. Open a PR against `master` with a description of what changed and why.
 
 ## What to work on
 
