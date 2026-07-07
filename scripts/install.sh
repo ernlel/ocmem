@@ -3,13 +3,17 @@
 # ocmem installer — deploys the structured memory system to ~/.config/opencode/
 #
 # Usage:
-#   ./scripts/install.sh          # install everything
-#   ./scripts/install.sh --force  # overwrite template files (NEVER memory data)
+#   ./scripts/install.sh           # install everything
+#   ./scripts/install.sh --dry-run # print what would happen without making changes
+#   ./scripts/install.sh --force   # overwrite template files (NEVER memory data)
 #
 # --force re-deploys template scaffolding (plugin, AGENTS.md block, the
 # /ocmem-* commands). It does NOT touch memory files (memory.md, general.md,
 # tools/*, domain/*) — those are user data and are always preserved if they
 # exist.
+#
+# --dry-run prints every action it would take without modifying anything.
+# Useful for previewing the install before running it.
 #
 set -euo pipefail
 
@@ -20,10 +24,12 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # Override with OPENCODE_CONFIG_DIR to point at a non-standard location.
 OC_DIR="${OPENCODE_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/opencode}"
 FORCE=0
+DRY_RUN=0
 
 for arg in "$@"; do
   case "$arg" in
     --force|-f) FORCE=1 ;;
+    --dry-run|-n) DRY_RUN=1 ;;
     *) echo "Unknown option: $arg"; exit 1 ;;
   esac
 done
@@ -31,24 +37,53 @@ done
 echo "ocmem — structured memory for opencode"
 echo "======================================"
 echo "Target dir: $OC_DIR"
+if [ "$DRY_RUN" -eq 1 ]; then
+  echo "Mode:       DRY RUN (no changes will be made)"
+fi
 echo ""
 
-mkdir -p "$OC_DIR"
+# Version check — opencode v1.17+ is required for experimental.* hooks
+if command -v opencode &>/dev/null; then
+  ver="$(opencode --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+' | head -1 || true)"
+  if [ -n "$ver" ]; then
+    major="${ver%%.*}"
+    minor="${ver#*.}"
+    if [ "$major" -lt 1 ] || { [ "$major" -eq 1 ] && [ "$minor" -lt 17 ]; }; then
+      echo "WARNING: opencode $ver detected — v1.17+ required for experimental.* hooks."
+      echo "         The plugin may not work correctly. Upgrade opencode to v1.17+."
+      echo ""
+    fi
+  fi
+else
+  echo "NOTE: opencode not found on PATH — the plugin will be installed but"
+  echo "      won't activate until opencode is installed and launched."
+  echo ""
+fi
+
+maybe() {
+  if [ "$DRY_RUN" -eq 1 ]; then
+    echo "       [dry-run] $*"
+  else
+    "$@"
+  fi
+}
+
+maybe mkdir -p "$OC_DIR"
 
 # 1. Plugin -----------------------------------------------------------------
-mkdir -p "$OC_DIR/plugins"
-install -m 644 "$REPO_ROOT/plugin/ocmem.ts" "$OC_DIR/plugins/ocmem.ts"
+maybe mkdir -p "$OC_DIR/plugins"
+maybe install -m 644 "$REPO_ROOT/plugin/ocmem.ts" "$OC_DIR/plugins/ocmem.ts"
 echo "[1/5] Plugin     -> $OC_DIR/plugins/ocmem.ts"
 
 # 2. Global memory structure ------------------------------------------------
-mkdir -p "$OC_DIR/memory/tools" "$OC_DIR/memory/domain"
+maybe mkdir -p "$OC_DIR/memory/tools" "$OC_DIR/memory/domain"
 
 # Template file deployer. Honours --force for scaffolding files.
 # NEVER call this for memory data — use copy_user_data instead.
 copy_template() {
   local src="$1" dest="$2"
   if [ "$FORCE" -eq 1 ] || [ ! -f "$dest" ]; then
-    install -m 644 "$src" "$dest"
+    maybe install -m 644 "$src" "$dest"
     echo "       created $(basename "$dest")"
   else
     echo "       kept existing $(basename "$dest") (use --force to overwrite)"
@@ -60,7 +95,7 @@ copy_template() {
 copy_user_data() {
   local src="$1" dest="$2"
   if [ ! -f "$dest" ]; then
-    install -m 644 "$src" "$dest"
+    maybe install -m 644 "$src" "$dest"
     echo "       created $(basename "$dest")"
   else
     echo "       kept existing $(basename "$dest") (user data, never overwritten)"
@@ -76,11 +111,18 @@ AGENTS_FILE="$OC_DIR/AGENTS.md"
 OPEN_MARKER="<!-- ocmem:begin -->"
 CLOSE_MARKER="<!-- ocmem:end -->"
 
-if [ -f "$AGENTS_FILE" ] && grep -qF "$OPEN_MARKER" "$AGENTS_FILE"; then
+if [ "$DRY_RUN" -eq 1 ]; then
+  if [ -f "$AGENTS_FILE" ] && grep -qF "$OPEN_MARKER" "$AGENTS_FILE"; then
+    if [ "$FORCE" -eq 1 ]; then
+      echo "[3/5] AGENTS.md -> would refresh ocmem block (--force)"
+    else
+      echo "[3/5] AGENTS.md -> already patched (skipped)"
+    fi
+  else
+    echo "[3/5] AGENTS.md -> would append memory instructions"
+  fi
+elif [ -f "$AGENTS_FILE" ] && grep -qF "$OPEN_MARKER" "$AGENTS_FILE"; then
   if [ "$FORCE" -eq 1 ]; then
-    # Re-deploy: strip the existing ocmem block and append the fresh one.
-    # Use a temp file because sed -i differs between GNU and BSD.
-    # Variable names avoid awk reserved words (close, open, function, …).
     tmp="$(mktemp)"
     awk -v om="$OPEN_MARKER" -v cm="$CLOSE_MARKER" '
       $0 == om { skip = 1; next }
@@ -90,7 +132,7 @@ if [ -f "$AGENTS_FILE" ] && grep -qF "$OPEN_MARKER" "$AGENTS_FILE"; then
     {
       echo ""
       echo "$OPEN_MARKER"
-      cat "$REPO_ROOT/templates/AGENTS-memory.md"
+      sed "s|~/.config/opencode|$OC_DIR|g" "$REPO_ROOT/templates/AGENTS-memory.md"
       echo "$CLOSE_MARKER"
       echo ""
     } >> "$tmp"
@@ -106,7 +148,7 @@ else
   {
     echo ""
     echo "$OPEN_MARKER"
-    cat "$REPO_ROOT/templates/AGENTS-memory.md"
+    sed "s|~/.config/opencode|$OC_DIR|g" "$REPO_ROOT/templates/AGENTS-memory.md"
     echo "$CLOSE_MARKER"
     echo ""
   } >> "$AGENTS_FILE"
@@ -114,11 +156,12 @@ else
 fi
 
 # 4. ocmem commands ---------------------------------------------------------
-mkdir -p "$OC_DIR/commands"
+maybe mkdir -p "$OC_DIR/commands"
 copy_template "$REPO_ROOT/templates/ocmem-init.md"       "$OC_DIR/commands/ocmem-init.md"
 copy_template "$REPO_ROOT/templates/ocmem-remember.md"   "$OC_DIR/commands/ocmem-remember.md"
 copy_template "$REPO_ROOT/templates/ocmem-reorganize.md" "$OC_DIR/commands/ocmem-reorganize.md"
-echo "[4/5] Commands   -> $OC_DIR/commands/ocmem-{init,remember,reorganize}.md"
+copy_template "$REPO_ROOT/templates/ocmem-export.md"     "$OC_DIR/commands/ocmem-export.md"
+echo "[4/5] Commands   -> $OC_DIR/commands/ocmem-{init,remember,reorganize,export}.md"
 
 # 5. Plugin dependency ------------------------------------------------------
 #
@@ -128,7 +171,9 @@ echo "[4/5] Commands   -> $OC_DIR/commands/ocmem-{init,remember,reorganize}.md"
 # the types.
 PKG_FILE="$OC_DIR/package.json"
 NEED_INSTALL=0
-if [ ! -f "$PKG_FILE" ]; then
+if [ "$DRY_RUN" -eq 1 ]; then
+  echo "[5/5] Dependency -> would ensure @opencode-ai/plugin in $PKG_FILE"
+elif [ ! -f "$PKG_FILE" ]; then
   echo '{"dependencies":{"@opencode-ai/plugin":"latest"}}' > "$PKG_FILE"
   NEED_INSTALL=1
 elif ! grep -q '"@opencode-ai/plugin"' "$PKG_FILE"; then

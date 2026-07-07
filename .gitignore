@@ -8,4 +8,7 @@ node_modules/
 *~
 
 # Per-developer opencode state (plugin cache, project-local memory, etc.)
+# NOTE: This repo uses .opencode/ for its own development. Users of ocmem
+# SHOULD commit their .opencode/memory/MEMORY.md in their project repos
+# (with an appropriate .gitignore exception).
 .opencode/
