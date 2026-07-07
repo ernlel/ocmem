@@ -21,8 +21,7 @@ It gives opencode two things:
   ├── tools/{tool}.md                 tool configs, CLI patterns
   └── domain/{topic}.md               domain knowledge
 
-.opencode/memory/                    ← project memory (per-repo, committable)
-  └── MEMORY.md                       project-specific notes
+MEMORY.md                            ← project memory at repo root
 ```
 
 ---
@@ -137,7 +136,7 @@ Run the built-in command in any repo:
 /ocmem-init
 ```
 
-This creates `.opencode/memory/MEMORY.md` from the template if it doesn't
+This creates `MEMORY.md` at the repo root from the template if it doesn't
 already exist. (The agent will also auto-create it on first use per the
 `AGENTS.md` rules, so this is just a convenience.)
 
@@ -266,11 +265,11 @@ suffix), set `OPENCODE_CONFIG_DIR` instead.
 
 ### Version-control project memory
 
-Project memory lives in `.opencode/memory/MEMORY.md` — commit it to share
+Project memory lives in `MEMORY.md` at the repo root — commit it to share
 context with your team:
 
 ```bash
-git add .opencode/memory/MEMORY.md
+git add MEMORY.md
 ```
 
 Global memory (`~/.config/opencode/memory/`) is yours; consider a private git

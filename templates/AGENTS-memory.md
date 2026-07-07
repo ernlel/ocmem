@@ -3,7 +3,7 @@
 Maintain a structured, persistent memory system with two roots:
 
 - **Global** — `~/.config/opencode/memory/` (cross-project knowledge)
-- **Project** — `.opencode/memory/` within the current repo (project-specific knowledge)
+- **Project** — `MEMORY.md` at the repo root (project-specific knowledge)
 
 The `ocmem` plugin auto-injects the global index and the current project's
 `MEMORY.md` into every response, so you do not need to read them manually at
@@ -19,7 +19,7 @@ Global (`~/.config/opencode/memory/`):
 - `tools/{tool}.md` — tool configs, CLI patterns, workarounds (one file per tool)
 - `domain/{topic}.md` — domain-specific knowledge (one file per topic)
 
-Project (`.opencode/memory/`):
+Project (`MEMORY.md` at repo root):
 
 - `MEMORY.md` — project-specific notes: active work, codebase patterns, decisions
 
@@ -79,7 +79,7 @@ re-sort, and index refresh.
 
 ## Project Memory Auto-Init
 
-At session start in any project, check for `.opencode/memory/MEMORY.md`. If it
+At session start in any project, check for `MEMORY.md` at the repo root. If it
 does not exist, create it using the project memory template (see
 `/ocmem-init`). The first time you open a new project the scaffolding is
 created automatically; after that, fill it in as you go.
@@ -88,7 +88,7 @@ created automatically; after that, fill it in as you go.
 
 Project `MEMORY.md` files must contain a short `## Global Memory` pointer near
 the top — never duplicate the topic-file list into project memory. The list
-lives here (in `AGENTS.md`) as the single source of truth. Project `MEMORY.md`
+lives here (in `AGENTS.md`) as the single source of truth. Root `MEMORY.md`
 has a 200-line budget (that is what the plugin injects) — use it for project
 knowledge, not boilerplate.
 

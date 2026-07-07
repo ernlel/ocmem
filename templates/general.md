@@ -1,7 +1,7 @@
 # General — Cross-Project Conventions
 
 Use this file for conventions and preferences that apply across ALL projects.
-For project-specific conventions, use `.opencode/memory/MEMORY.md` instead.
+For project-specific conventions, use `MEMORY.md` at the repo root instead.
 For tool-specific gotchas, use `tools/{tool}.md`.
 
 ## Writing & Naming Conventions

@@ -9,7 +9,7 @@ capture pass.
 1. **Read all memory files:**
    - Global: `~/.config/opencode/memory/memory.md` and every file it indexes
      under `tools/` and `domain/`, plus `general.md`
-   - Project: `.opencode/memory/MEMORY.md` (if it exists)
+    - Project: `MEMORY.md` at the repo root (if it exists)
 
 2. **Remove duplicates and outdated entries.**
    - If the same fact appears in two files, keep it in the more specific

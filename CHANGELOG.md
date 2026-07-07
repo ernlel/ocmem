@@ -22,7 +22,7 @@ All notable changes to ocmem.
 - `tsconfig.json` updated: uses `npx tsc`, added `@types/node`, set `"types": ["node"]`.
 - Paths in the AGENTS.md block are now substituted with the resolved config directory at install time (no more hardcoded `~/.config/opencode/`).
 - Plugin error handling: unexpected read/stat errors are now logged to `stderr` instead of being silently swallowed.
-- `.gitignore` now includes a note clarifying that users *should* commit their `.opencode/memory/MEMORY.md`.
+- `.gitignore` now includes a note clarifying that users *should* commit their project `MEMORY.md`.
 - README fully updated to reflect all features, `--dry-run`, version check, and upgrade path.
 - REMINDER text shortened: full reminder on first call, one-liner on subsequent calls.
 - Shell scripts install/ocmem-{init,remember,reorganize,export}.md now tracked by uninstaller.

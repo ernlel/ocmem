@@ -21,7 +21,7 @@ to opencode.
 |---|---|
 | Config home | `~/.config/opencode/` |
 | Instructions file | `AGENTS.md` |
-| Per-project memory | `.opencode/memory/MEMORY.md` (lives in the repo, version-controllable) |
+| Per-project memory | `MEMORY.md` at the repo root (version-controllable) |
 | Hook mechanism | TypeScript plugin auto-loaded from `~/.config/opencode/plugins/` |
 | Context injection | `experimental.chat.system.transform` hook pushes into `output.system` |
 | Session id | the plugin receives `sessionID` in hook input — no flag file needed |
@@ -55,7 +55,7 @@ the compaction summary as a belt-and-suspenders backup (harmless redundancy).
 Claude Code stashed per-project memory under `~/.claude/projects/{mapped-path}/`
 — a path derived by replacing slashes with hyphens. opencode has a cleaner
 convention: project-local config lives in `.opencode/` inside the repo. So
-project memory is `.opencode/memory/MEMORY.md`.
+project memory is `MEMORY.md` at the repo root.
 
 This means:
 
@@ -80,7 +80,7 @@ at `~/.config/opencode/memory/` and is shared across every project.
 ┌─────────────────────────────────────────────────────────────┐
 │  ocmem plugin  (context injection — every LLM call)         │
 │  • reads ~/.config/opencode/memory/memory.md   (global idx) │
-│  • reads .opencode/memory/MEMORY.md            (project)    │
+│  • reads MEMORY.md                       (project, root or .opencode/memory/) │
 │  • pushes both into output.system                            │
 │  • mtime-cached so it's ~free after the first call          │
 └─────────────────────────────────────────────────────────────┘
@@ -93,8 +93,7 @@ at `~/.config/opencode/memory/` and is shared across every project.
 │    ├── general.md  (cross-project)                          │
 │    ├── tools/{tool}.md                                       │
 │    └── domain/{topic}.md                                     │
-│  .opencode/memory/                                           │
-│    └── MEMORY.md   (project-specific)                       │
+│  MEMORY.md                                (project-specific, at repo root)    │
 └─────────────────────────────────────────────────────────────┘
 ```
 

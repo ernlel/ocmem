@@ -17,15 +17,15 @@ Steps:
    If a file is listed in the index but does not exist, note it as a
    broken reference.
 
-3. **Read the project memory** if `.opencode/memory/MEMORY.md` exists.
+ 3. **Read the project memory** if `MEMORY.md` exists at the repo root.
 
-4. **Assemble a single markdown document** with this structure:
+ 4. **Assemble a single markdown document** with this structure:
 
-   ```
-   # ocmem Export — YYYY-MM-DD
+    ```
+    # ocmem Export — YYYY-MM-DD
 
-   ## Project Memory
-   (content of .opencode/memory/MEMORY.md, or "No project memory.")
+    ## Project Memory
+    (content of MEMORY.md, or "No project memory.")
 
    ## Global Memory Index
    (content of memory.md)

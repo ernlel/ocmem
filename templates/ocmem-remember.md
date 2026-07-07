@@ -18,9 +18,9 @@ Steps:
      - `tools/{tool}.md` for tool-specific gotchas (prefer tools/ when unsure)
      - `domain/{topic}.md` for domain knowledge
      - `general.md` for user identity, workflow preferences, conventions
-   - **Project** → belongs in `.opencode/memory/MEMORY.md` (this repo only)
+    - **Project** → belongs in `MEMORY.md` at the repo root (this repo only)
 
-3. **Check for duplicates using the index.** Read `~/.config/opencode/memory/memory.md`
+ 3. **Check for duplicates using the index.** Read `~/.config/opencode/memory/memory.md`
    (the global index) and scan it for candidates that overlap with existing
    entries. The index lists every file with one-line descriptions — use it
    to filter duplicates without reading every individual file. For each
@@ -46,7 +46,7 @@ Steps:
       Saves 10 minutes next time someone installs gh via nix.
 
    2. This repo uses mise for task running; tasks live in mise.toml.
-      → .opencode/memory/MEMORY.md (project notes)
+      → MEMORY.md (project notes)
       ```
    If a candidate would update an existing entry, show both old and new.
 
