@@ -9,7 +9,7 @@
  * ------------
  * On every LLM call it injects three things into the system prompt:
  *   1. A hard memory-review reminder (enforces the AGENTS.md rule)
- *   2. The current project's `MEMORY.md` (root, with fallback to `.opencode/memory/MEMORY.md`)
+ *   2. The current project's `MEMORY.md` at the repo root
  *   3. The global `~/.config/opencode/memory/memory.md` index
  *
  * Because the injection lives in the system prompt it is present for every
@@ -47,7 +47,7 @@ const FULL_REMINDER = `=== ${MARKER}: Memory Review Required ===
 Before ending any task that involved debugging, configuration, or learning,
 do a final memory scan:
   1. Did I learn anything cross-project? → ~/.config/opencode/memory/tools/ or domain/
-  2. Did I learn anything about THIS project? → MEMORY.md (root, or .opencode/memory/MEMORY.md)
+  2. Did I learn anything about THIS project? → MEMORY.md at repo root
   3. Update the index in memory.md for any new files
 If the answer to all three is "no", say so briefly. Do NOT wait for the user
 to prompt — over-recording is cheap, re-discovering is expensive.`
@@ -151,13 +151,7 @@ const OcmemPlugin: Plugin = async ({ directory }) => {
   const home = homedir()
   const globalDir = join(home, ".config", "opencode", "memory")
   const globalIndex = join(globalDir, "memory.md")
-  // Root MEMORY.md is preferred; fall back to .opencode/memory/MEMORY.md
-  // for backward compatibility with existing installations.
-  const projectMemory = (() => {
-    const root = join(directory, "MEMORY.md")
-    if (existsSync(root)) return root
-    return join(directory, ".opencode", "memory", "MEMORY.md")
-  })()
+  const projectMemory = join(directory, "MEMORY.md")
 
   // Per-process cache. Invalidated when any tracked file's mtime changes, so
   // writes the agent makes to memory during a session are picked up on the

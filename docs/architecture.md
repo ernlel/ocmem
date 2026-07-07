@@ -80,7 +80,7 @@ at `~/.config/opencode/memory/` and is shared across every project.
 ┌─────────────────────────────────────────────────────────────┐
 │  ocmem plugin  (context injection — every LLM call)         │
 │  • reads ~/.config/opencode/memory/memory.md   (global idx) │
-│  • reads MEMORY.md                       (project, root or .opencode/memory/) │
+│  • reads MEMORY.md                       (project, at repo root)         │
 │  • pushes both into output.system                            │
 │  • mtime-cached so it's ~free after the first call          │
 └─────────────────────────────────────────────────────────────┘
