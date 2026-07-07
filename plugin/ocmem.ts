@@ -53,7 +53,7 @@ If the answer to all three is "no", say so briefly. Do NOT wait for the user
 to prompt — over-recording is cheap, re-discovering is expensive.`
 
 /** Short one-liner — injected on every call after the first. */
-const REMINDER = `=== ${MARKER}: Review memory before ending this task.`
+const REMINDER = `=== ${MARKER}: Review memory before ending task (full rules in AGENTS.md) ===`
 
 export function readTruncated(filePath: string, maxLines: number): string | null {
   if (!existsSync(filePath)) return null

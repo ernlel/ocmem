@@ -51,6 +51,8 @@ Then **restart opencode**. That's it — the plugin is auto-loaded from
 > The installer never overwrites existing memory files. Run
 > `./scripts/install.sh --force` to re-deploy template scaffolding (plugin,
 > AGENTS.md block, commands). Memory data is always preserved.
+> Use `./scripts/install.sh --dry-run` to preview what would happen without
+> making changes.
 
 ### What the installer does
 
@@ -58,8 +60,10 @@ Then **restart opencode**. That's it — the plugin is auto-loaded from
 |------|--------|
 | Plugin | `~/.config/opencode/plugins/ocmem.ts` |
 | Global memory dir | `~/.config/opencode/memory/` + `memory.md`, `general.md`, `tools/`, `domain/` |
-| AGENTS.md patch | memory-management rules appended (between `<!-- ocmem:begin -->` markers) |
-| Commands | `~/.config/opencode/commands/ocmem-{init,remember,reorganize}.md` |
+| AGENTS.md patch | memory-management rules appended (between `<!-- ocmem:begin -->` markers, with `$OC_DIR` substituted for the default path) |
+| Commands | `~/.config/opencode/commands/ocmem-{init,remember,reorganize,export}.md` |
+| Version check | warns if opencode < v1.17 or missing from PATH |
+| Dry-run | `--dry-run` / `-n` prints every action without making changes |
 
 ---
 
@@ -82,6 +86,7 @@ mkdir -p ~/.config/opencode/commands
 cp templates/ocmem-init.md       ~/.config/opencode/commands/ocmem-init.md
 cp templates/ocmem-remember.md   ~/.config/opencode/commands/ocmem-remember.md
 cp templates/ocmem-reorganize.md ~/.config/opencode/commands/ocmem-reorganize.md
+cp templates/ocmem-export.md     ~/.config/opencode/commands/ocmem-export.md
 
 # 4. AGENTS.md — append the contents of templates/AGENTS-memory.md
 cat templates/AGENTS-memory.md >> ~/.config/opencode/AGENTS.md
@@ -95,9 +100,13 @@ Restart opencode.
 
 ### Start working
 
-Open any project in opencode. On the first response the plugin injects the
-global memory index and (if it exists) the project's `MEMORY.md` into the
-system prompt automatically.
+Open any project in opencode. On the first response the plugin injects:
+- A full memory-review reminder
+- The global memory index (and warns about any `tools/` or `domain/` files not listed in it)
+- The project's `MEMORY.md` (if it exists)
+
+After the first call the reminder is shortened to a one-liner to avoid
+repetition and token waste.
 
 ### Scaffold project memory
 
@@ -144,6 +153,17 @@ splits overstuffed files, re-sorts by date, updates the index, and shows you a
 summary of what changed. Run this in **plan mode** first so you can review
 before changes are applied.
 
+### Export memory
+
+Create a single-file snapshot of all memory (global + project):
+
+```
+/ocmem-export
+```
+
+Writes `ocmem-export-YYYY-MM-DD.md` to the workspace root. Useful for
+backups, sharing between machines, or reviewing everything at once.
+
 ### Domain → skill lifecycle
 
 When domain knowledge in `~/.config/opencode/memory/domain/{name}/` grows large
@@ -171,9 +191,17 @@ things the original needed special handling for come for free:
 - **Survives compaction** — the system prompt is re-sent in full after
   compaction, so memory is never summarised away.
 
-File reads are mtime-cached per process: after the first call the overhead is
-two `statSync` calls (sub-millisecond). When the agent writes a memory entry
-mid-session, the next call picks it up automatically.
+File reads are mtime-cached per process: after the first call the overhead is a
+handful of `statSync` + `existsSync` calls (sub-millisecond). When the agent
+writes a memory entry mid-session, the next call picks it up automatically.
+
+The full memory-review reminder is injected only on the first LLM call; a
+one-line shorthand is used on subsequent calls to avoid token waste and prevent
+the model from learning to ignore a repetitive block.
+
+The plugin also scans the `tools/` and `domain/` directories for `.md` files
+that aren't listed in the `memory.md` index. Orphaned files are invisible to
+the agent, so it warns about them so you can update the index.
 
 See [`docs/architecture.md`](docs/architecture.md) for the full design rationale
 and a side-by-side comparison with the original Claude Code setup.
@@ -182,15 +210,16 @@ and a side-by-side comparison with the original Claude Code setup.
 
 ## Customisation
 
-### Change the line budget
+### Change the injection budget
 
 The plugin injects the first 200 lines of the project `MEMORY.md` and 200 lines
-of the global index. Edit the constants at the top of
-`~/.config/opencode/plugins/ocmem.ts`:
+of the global index (with a hard 8000-character cap as a safety net). Edit the
+constants at the top of `~/.config/opencode/plugins/ocmem.ts`:
 
 ```typescript
-const MAX_PROJECT_LINES = 200
-const MAX_INDEX_LINES = 200
+export const MAX_PROJECT_LINES = 200
+export const MAX_INDEX_LINES = 200
+const MAX_CHARS = 8000
 ```
 
 ### Disable the plugin
@@ -236,6 +265,9 @@ repo for it separately.
 
 # Remove everything including memory files and the AGENTS.md patch:
 ./scripts/uninstall.sh --purge
+
+# Preview what would happen without making changes:
+./scripts/uninstall.sh --dry-run
 ```
 
 Restart opencode.
@@ -246,6 +278,8 @@ Restart opencode.
 
 ```
 ocmem/
+├── .github/workflows/
+│   └── ci.yml                   # CI pipeline (typecheck + tests)
 ├── plugin/
 │   └── ocmem.ts                 # the opencode plugin (memory injector)
 ├── templates/
@@ -255,12 +289,20 @@ ocmem/
 │   ├── MEMORY.md                # project memory template
 │   ├── ocmem-init.md            # /ocmem-init command template
 │   ├── ocmem-remember.md        # /ocmem-remember command template
-│   └── ocmem-reorganize.md      # /ocmem-reorganize command template
+│   ├── ocmem-reorganize.md      # /ocmem-reorganize command template
+│   └── ocmem-export.md          # /ocmem-export command template
 ├── scripts/
 │   ├── install.sh               # one-command installer
 │   └── uninstall.sh             # uninstaller (keeps memory by default)
+├── test/
+│   ├── ocmem.test.ts            # plugin unit tests
+│   └── install.test.sh          # install/uninstall integration tests
 ├── docs/
 │   └── architecture.md          # design rationale & Claude Code comparison
+├── CHANGELOG.md
+├── CONTRIBUTING.md
+├── package.json
+├── package-lock.json
 └── README.md
 ```
 
