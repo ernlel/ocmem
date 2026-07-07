@@ -23,6 +23,28 @@ Project (`.opencode/memory/`):
 
 - `MEMORY.md` — project-specific notes: active work, codebase patterns, decisions
 
+#### Tools vs Domain
+
+If the fact is about **how to use a specific tool/CLI**, it goes in `tools/`.
+If it's about **how a domain concept works** regardless of tool, it goes in
+`domain/`. When in doubt, prefer `tools/` — it's more discoverable.
+
+### Entry Format
+
+Every entry follows this format:
+
+```
+YYYY-MM-DD — one-sentence fact — one-sentence reason it matters
+```
+
+**Good entries:**
+- `2026-07-06 — git credential helper ignores nix-installed gh (hardcodes /usr/bin/gh). — Use system gh or patch credential helper path.`
+- `2026-07-06 — This repo uses mise for task running; tasks are in mise.toml. — Don't look for Makefile or package.json scripts.`
+
+**Bad entries (avoid these):**
+- `2026-07-06 — fixed the thing with git — it works now` (too vague — no one can use this)
+- `2026-07-06 — spent 2 hours debugging the deployment pipeline and found that the kubernetes namespace was wrong in the staging config file under deploy/staging/values.yaml line 42` (too long — burying the insight in narration)
+
 ### Rules
 
 1. Write to memory immediately when ANY of these happen:
@@ -32,25 +54,23 @@ Project (`.opencode/memory/`):
    - You learn a project convention, dependency, or constraint
    Do NOT wait for the user to ask. If in doubt, write it — over-recording is cheap, re-discovering is expensive.
 2. Keep `memory.md` as a current index with one-line descriptions
-3. Entries: date, what, why — nothing more
+3. Entries MUST follow the format above (YYYY-MM-DD, one-sentence fact, one-sentence reason)
 4. The `ocmem` plugin injects `memory.md` and the project `MEMORY.md` automatically. Load other topic files only when relevant
 5. If a file does not exist yet, create it
-6. Before removing or modifying any existing memory entry, ask the user to confirm — show the current content and the proposed change
+6. Before **removing** a memory entry or **changing its factual content**, ask the user to confirm — show the current content and the proposed change. Formatting, reorganisation, and index updates do not require confirmation.
+7. If you discover an existing memory entry is wrong or outdated, note the conflict and propose an update. Never silently leave contradictory entries.
 
-### Memory Review (mandatory)
+### What NOT to Record
 
-The ocmem plugin injects a hard reminder into every LLM call's system prompt
-(see `plugin/ocmem.ts: REMINDER`). You will see a `=== ocmem: Memory Review
-Required ===` block on every turn — that is the rule.
+Do NOT record:
+- Things documented in the project's own README or official tool docs
+- One-off debugging steps (only record the reusable insight)
+- Facts obvious from reading package.json, tsconfig.json, etc.
+- Session-specific context that won't matter next time
 
-Before ending any task that involved debugging, configuration, or learning, do a final
-memory scan:
+### Memory Review
 
-1. Did I learn anything cross-project? → `~/.config/opencode/memory/tools/` or `domain/`
-2. Did I learn anything about THIS project? → `.opencode/memory/MEMORY.md`
-3. Update the index in `memory.md` for any new files
-
-If the answer to all three is "no", say so briefly so the user knows you checked.
+The plugin injects a memory review reminder on every call. Follow it.
 
 ### Maintenance
 
@@ -75,7 +95,7 @@ knowledge, not boilerplate.
 ## Domain Knowledge Lifecycle
 
 1. **Staging** — knowledge accumulates in `~/.config/opencode/memory/domain/{name}/`
-2. **Promotion** — once enough knowledge exists, package it as an opencode skill
+2. **Promotion** — when a domain file reaches 10+ entries or 50+ lines, package it as an opencode skill
 3. **Pointer** — after promotion, the memory file becomes a pointer to the skill; the content lives in the skill
 
 When an update is needed to a promoted domain, note it in the memory file so an

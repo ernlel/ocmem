@@ -39,13 +39,11 @@ const MAX_CHARS = 8000
 const MARKER = "ocmem"
 
 /**
- * Hard reminder injected into every LLM call's system prompt. Lives in the
- * plugin (not just AGENTS.md) so the agent cannot fail to see it — system
- * prompts are never summarised away and survive compaction. The agent still
- * has to choose to act on it, but ignoring it is now an active decision, not
- * an oversight.
+ * Full memory-review reminder — injected on the first LLM call only.
+ * After the first call, a shorter one-liner is used to avoid token waste
+ * and habituation (models learn to ignore identically repeated text).
  */
-const REMINDER = `=== ${MARKER}: Memory Review Required ===
+const FULL_REMINDER = `=== ${MARKER}: Memory Review Required ===
 Before ending any task that involved debugging, configuration, or learning,
 do a final memory scan:
   1. Did I learn anything cross-project? → ~/.config/opencode/memory/tools/ or domain/
@@ -53,6 +51,9 @@ do a final memory scan:
   3. Update the index in memory.md for any new files
 If the answer to all three is "no", say so briefly. Do NOT wait for the user
 to prompt — over-recording is cheap, re-discovering is expensive.`
+
+/** Short one-liner — injected on every call after the first. */
+const REMINDER = `=== ${MARKER}: Review memory before ending this task.`
 
 export function readTruncated(filePath: string, maxLines: number): string | null {
   if (!existsSync(filePath)) return null
@@ -128,6 +129,10 @@ const OcmemPlugin: Plugin = async ({ directory }) => {
   let cachedSig = ""
   let cachedContext = ""
 
+  // First-call tracking — inject the full reminder only once to avoid token
+  // waste and the habituation effect (models learn to skip repeated text).
+  let firstCallDone = false
+
   const build = (): string => {
     const sig = signature([globalIndex, projectMemory])
     if (sig === cachedSig && cachedContext) {
@@ -170,14 +175,19 @@ const OcmemPlugin: Plugin = async ({ directory }) => {
     //
     // Primary injection — runs on every LLM call, for every agent & subagent.
     "experimental.chat.system.transform": async (_input, output) => {
-      output.system.push(REMINDER)
+      if (!firstCallDone) {
+        output.system.push(FULL_REMINDER)
+        firstCallDone = true
+      } else {
+        output.system.push(REMINDER)
+      }
       const ctx = build()
       if (ctx) output.system.push(ctx)
     },
 
     // Backup — folds memory into the compaction summary so it is never lost
-    // when a long session is summarised. (The system-prompt hook above already
-    // re-injects after compaction; this is redundant but harmless.)
+    // when a long session is summarised. Always uses the short reminder (the
+    // full one was already seen on the first call).
     "experimental.session.compacting": async (_input, output) => {
       output.context.push(REMINDER)
       const ctx = build()
