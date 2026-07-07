@@ -19,7 +19,7 @@ jobs:
       - run: npm test
       - run: bash test/install.test.sh
 
-  tag:
+  release:
     if: github.event_name == 'push' && github.ref_name == 'master'
     needs: [test]
     runs-on: ubuntu-latest
@@ -27,18 +27,20 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Read version and create tag
+      - name: Create tag and release
         run: |
           version="v$(jq -r .version package.json)"
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
-          if ! git tag -l "$version" | grep -q .; then
-            git tag -a "$version" -m "release: $version"
-            git push origin "$version"
-            echo "Created tag $version"
-          else
-            echo "Tag $version already exists — skipping"
+          if gh release view "$version" --json tagName --jq .tagName &>/dev/null; then
+            echo "Release $version already exists — skipping"
+            exit 0
           fi
+          # Extract notes from CHANGELOG.md for this version
+          notes=$(awk -v ver="${version#v}" '
+            $0 ~ "^## " ver { found=1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md)
+          gh release create "$version" \
+            --title "ocmem $version" \
+            --notes "$notes" \
+            --target "${{ github.sha }}"
