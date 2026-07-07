@@ -96,6 +96,27 @@ Restart opencode.
 
 ---
 
+## Upgrading
+
+```bash
+# Re-deploy the plugin, commands, and AGENTS.md block (keeps memory files):
+cd ocmem && git pull && ./scripts/install.sh --force
+```
+
+This refreshes all scaffolding without touching your memory data
+(`memory.md`, `general.md`, `tools/*`, `domain/*`).
+
+ocmem follows [SemVer](https://semver.org/) with git tags
+(`v{major}.{minor}.{patch}`):
+
+- **Major** — breaking changes that may require manual migration
+- **Minor** — new features, backward compatible
+- **Patch** — bug fixes, documentation, prompt refinements
+
+Check [`CHANGELOG.md`](CHANGELOG.md) for what's new between versions.
+
+---
+
 ## Usage
 
 ### Start working

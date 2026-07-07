@@ -68,6 +68,22 @@ Check the open issues, or look at `CHANGELOG.md` for the "Unreleased"
 section to see what's already in flight. If you want to add something
 not covered by an issue, open one first to discuss.
 
+## Versioning
+
+ocmem follows [SemVer](https://semver.org/) via git tags (`v{major}.{minor}.{patch}`):
+
+- **Major** — breaking changes: memory format changes, plugin API changes, AGENTS.md rule changes that require manual migration
+- **Minor** — new features: new commands, new hooks, new templates, new tests — backward compatible
+- **Patch** — fixes: bug fixes, documentation updates, prompt refinements, CI changes — backward compatible
+
+The version in `package.json` is the source of truth. When a PR is merged to
+`master`, CI automatically creates a git tag matching the version. To release:
+
+1. Bump the version in `package.json`.
+2. Move the "Unreleased" section in `CHANGELOG.md` to a new dated section.
+3. Commit with message `release: v{x.y.z}`.
+4. Merge to `master` — CI tags it automatically.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
